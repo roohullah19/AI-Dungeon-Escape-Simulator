@@ -14,12 +14,16 @@ public class GamePanel extends JPanel implements KeyListener {
     int cols = 15;
     int rows = 10;
 
+    int [][] maze;
+
     public GamePanel() {
         setFocusable(true);
         addKeyListener(this);
 
         setSize(cols * tileSize, rows * tileSize);
         setBackground(Color.BLACK);
+        maze=new int[rows][cols];
+        generateMaze();
     }
 
     @Override
@@ -32,14 +36,21 @@ public class GamePanel extends JPanel implements KeyListener {
 
     public void drawGrid(Graphics g) {
 
-        g.setColor(Color.DARK_GRAY);
-
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
 
                 int x = col * tileSize;
                 int y = row * tileSize;
 
+                if (maze[row][col] == 1) {
+                    g.setColor(Color.GRAY);
+                    g.fillRect(x, y, tileSize, tileSize);
+                } else {
+                    g.setColor(Color.BLACK);
+                    g.fillRect(x, y, tileSize, tileSize);
+                }
+
+                g.setColor(Color.DARK_GRAY);
                 g.drawRect(x, y, tileSize, tileSize);
             }
         }
@@ -58,19 +69,23 @@ public class GamePanel extends JPanel implements KeyListener {
         int key = e.getKeyCode();
 
         if (key == KeyEvent.VK_W || key == KeyEvent.VK_UP) {
-            if (playerY > 0) playerY--;
+            if (playerY > 0 && maze[playerY - 1][playerX] == 0)
+                playerY--;
         }
 
         if (key == KeyEvent.VK_S || key == KeyEvent.VK_DOWN) {
-            if (playerY < rows - 1) playerY++;
+            if (playerY < rows - 1 && maze[playerY + 1][playerX] == 0)
+                playerY++;
         }
 
         if (key == KeyEvent.VK_A || key == KeyEvent.VK_LEFT) {
-            if (playerX > 0) playerX--;
+            if (playerX > 0 && maze[playerY][playerX - 1] == 0)
+                playerX--;
         }
 
         if (key == KeyEvent.VK_D || key == KeyEvent.VK_RIGHT) {
-            if (playerX < cols - 1) playerX++;
+            if (playerX < cols - 1 && maze[playerY][playerX + 1] == 0)
+                playerX++;
         }
 
         repaint();
@@ -81,4 +96,21 @@ public class GamePanel extends JPanel implements KeyListener {
 
     @Override
     public void keyTyped(KeyEvent e) {}
+
+    public void generateMaze() {
+
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+
+                if (r == 0 || c == 0 || r == rows - 1 || c == cols - 1) {
+                    maze[r][c] = 1;
+                }
+                else {
+                    maze[r][c] = (Math.random() < 0.2) ? 1 : 0;
+                }
+            }
+        }
+
+        maze[0][0] = 0;
+    }
 }

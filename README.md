@@ -8,7 +8,7 @@ Currently in the planning and initial development phase.
 ---
 
 ## Description
-AI Dungeon Escape Simulator is a game-inspired DSA project where the player explores and escapes a randomly generated dungeon while AI-controlled enemies try to chase the player using different pathfinding algorithms.
+AI Dungeon Escap[.gitignore](.gitignore)e Simulator is a game-inspired DSA project where the player explores and escapes a randomly generated dungeon while AI-controlled enemies try to chase the player using different pathfinding algorithms.
 
 The main goal of this project is to practically implement and visualize important Data Structures and Algorithms concepts in an interactive and easy-to-understand way using Java Swing.
 
