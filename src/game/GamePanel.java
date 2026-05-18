@@ -13,11 +13,20 @@ public class GamePanel extends JPanel implements KeyListener {
     int enemyX = 13;
     int enemyY = 8;
 
-    int tileSize = 40;
-    int cols = 15;
-    int rows = 10;
+    int tileSize =30;
+    int cols = 21;
+    int rows = 21;
 
     int [][] maze;
+
+    boolean gameOver = false;
+    boolean gameWon = false;
+
+    int goalX = cols - 2;
+    int goalY = rows - 2;
+
+    ArrayList<Node> visitedNodes = new ArrayList<>();
+    ArrayList<Node> finalPath = new ArrayList<>();
 
     public GamePanel() {
         setFocusable(true);
@@ -28,11 +37,19 @@ public class GamePanel extends JPanel implements KeyListener {
         maze=new int[rows][cols];
         generateMaze();
 
-        javax.swing.Timer timer = new javax.swing.Timer(200, e -> {
-            moveEnemy();
+        javax.swing.Timer timer = new javax.swing.Timer(300, e -> {
+
+            if (!gameOver && !gameWon) {
+
+                moveEnemy();
+
+                checkGameOver();
+
+                checkWin();
+            }
+
             repaint();
         });
-
         timer.start();
     }
 
@@ -41,8 +58,22 @@ public class GamePanel extends JPanel implements KeyListener {
         super.paintComponent(g);
 
         drawGrid(g);
+        drawVisited(g);
+        drawPath(g);
+        drawGoal(g);
         drawPlayer(g);
         drawEnemy(g);
+
+        g.setColor(Color.WHITE);
+        g.setFont(new Font("Arial", Font.BOLD, 30));
+
+        if (gameOver) {
+            g.drawString("GAME OVER", 220, 200);
+        }
+
+        if (gameWon) {
+            g.drawString("YOU ESCAPED!", 200, 200);
+        }
     }
 
     public void drawGrid(Graphics g) {
@@ -67,6 +98,8 @@ public class GamePanel extends JPanel implements KeyListener {
         }
     }
 
+
+
     public void drawPlayer(Graphics g) {
 
         g.setColor(Color.GREEN);
@@ -80,7 +113,46 @@ public class GamePanel extends JPanel implements KeyListener {
 
         g.fillRect(enemyX * tileSize, enemyY * tileSize, tileSize, tileSize);
     }
+
+    public void drawGoal(Graphics g) {
+
+        g.setColor(Color.YELLOW);
+
+        g.fillRect(goalX * tileSize, goalY * tileSize, tileSize, tileSize);
+    }
+
+    public void drawVisited(Graphics g) {
+
+        g.setColor(new Color(50, 100, 255));
+
+        for (Node n : visitedNodes) {
+
+            g.fillRect(
+                    n.x * tileSize,
+                    n.y * tileSize,
+                    tileSize,
+                    tileSize
+            );
+        }
+    }
+    public void drawPath(Graphics g) {
+
+        g.setColor(Color.PINK);
+
+        for (Node n : finalPath) {
+
+            g.fillRect(
+                    n.x * tileSize,
+                    n.y * tileSize,
+                    tileSize,
+                    tileSize
+            );
+        }
+    }
+
     public ArrayList<Node> bfsPath(int startX, int startY, int targetX, int targetY) {
+        visitedNodes.clear();
+
 
         boolean[][] visited = new boolean[rows][cols];
         Node[][] parent = new Node[rows][cols];
@@ -96,6 +168,7 @@ public class GamePanel extends JPanel implements KeyListener {
         while (!queue.isEmpty()) {
 
             Node current = queue.poll();
+            visitedNodes.add(current);
 
             if (current.x == targetX && current.y == targetY) {
                 break;
@@ -118,18 +191,18 @@ public class GamePanel extends JPanel implements KeyListener {
             }
         }
 
-        ArrayList<Node> path = new ArrayList<>();
+        finalPath.clear();
 
         Node current = new Node(targetX, targetY);
 
         while (current != null && !(current.x == startX && current.y == startY)) {
-            path.add(current);
+            finalPath.add(current);
             current = parent[current.y][current.x];
         }
 
-        Collections.reverse(path);
+        Collections.reverse(finalPath);
 
-        return path;
+        return finalPath;
     }
 
     public void moveEnemy() {
@@ -144,12 +217,32 @@ public class GamePanel extends JPanel implements KeyListener {
         }
     }
 
+    public void checkGameOver() {
+
+        if (playerX == enemyX && playerY == enemyY) {
+            gameOver = true;
+        }
+    }
+
+    public void checkWin() {
+
+        if (playerX == goalX && playerY == goalY) {
+            gameWon = true;
+        }
+    }
+
+
+
 
 
     @Override
     public void keyPressed(KeyEvent e) {
 
         int key = e.getKeyCode();
+
+        if (gameOver || gameWon) {
+            return;
+        }
 
         if (key == KeyEvent.VK_W || key == KeyEvent.VK_UP) {
             if (playerY > 0 && maze[playerY - 1][playerX] == 0)
@@ -182,22 +275,64 @@ public class GamePanel extends JPanel implements KeyListener {
 
     public void generateMaze() {
 
+
         for (int r = 0; r < rows; r++) {
             for (int c = 0; c < cols; c++) {
-
-                if (r == 0 || c == 0 || r == rows - 1 || c == cols - 1) {
-                    maze[r][c] = 1;
-                }
-                else {
-                    maze[r][c] = (Math.random() < 0.3) ? 1 : 0;
-                }
+                maze[r][c] = 1;
             }
         }
 
-        maze[1][1] = 0;
-        maze[1][2] = 0;
-        maze[2][1] = 0;
 
+        dfsMaze(1, 1);
+        addExtraPaths();
+
+
+        maze[1][1] = 0;
+        maze[rows - 2][cols - 2] = 0;
+    }
+
+    public void dfsMaze(int x, int y) {
+
+        maze[y][x] = 0;
+
+        int[] dx = {0, 0, 2, -2};
+        int[] dy = {2, -2, 0, 0};
+
+        Integer[] directions = {0, 1, 2, 3};
+
+        Collections.shuffle(Arrays.asList(directions));
+
+        for (int dir : directions) {
+
+            int nx = x + dx[dir];
+            int ny = y + dy[dir];
+
+            if (nx > 0 && ny > 0 &&
+                    nx < cols - 1 &&
+                    ny < rows - 1 &&
+                    maze[ny][nx] == 1) {
+
+                maze[y + dy[dir] / 2][x + dx[dir] / 2] = 0;
+
+                dfsMaze(nx, ny);
+            }
+        }
+    }
+    public void addExtraPaths() {
+
+        for (int r = 1; r < rows - 1; r++) {
+            for (int c = 1; c < cols - 1; c++) {
+
+
+                if (maze[r][c] == 1) {
+
+                    if (Math.random() < 0.15) {
+
+                        maze[r][c] = 0;
+                    }
+                }
+            }
+        }
     }
 }
 class Node {
