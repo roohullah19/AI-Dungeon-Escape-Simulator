@@ -1,68 +1,101 @@
 # AI Dungeon Escape Simulator
 
-A semester project for Data Structures & Algorithms developed in Java.
-
-## Project Status
-Currently in the planning and initial development phase.
+A Java-based Data Structures & Algorithms project that simulates a grid-based dungeon game where a player escapes a randomly generated maze while being chased by an AI enemy using BFS pathfinding.
 
 ---
 
-## Description
-AI Dungeon Escap[.gitignore](.gitignore)e Simulator is a game-inspired DSA project where the player explores and escapes a randomly generated dungeon while AI-controlled enemies try to chase the player using different pathfinding algorithms.
+## Project Overview
 
-The main goal of this project is to practically implement and visualize important Data Structures and Algorithms concepts in an interactive and easy-to-understand way using Java Swing.
+This project demonstrates the practical implementation of core Data Structures and Algorithms in a real-time interactive environment using Java Swing.
 
----
-
-## Main Objectives
-- Understand and implement pathfinding algorithms
-- Visualize how different algorithms work in real time
-- Build intelligent enemy movement using AI logic
-- Apply DSA concepts in a practical project
-- Compare performance of different algorithms
+The main focus is on visualizing graph traversal (BFS) and applying it to AI-driven enemy movement in a maze-based game world.
 
 ---
 
-## Planned Data Structures
-The project is planned to include:
-- Arrays
-- ArrayList
-- LinkedList
-- Stack
-- Queue
-- HashMap
-- Priority Queue (Heap)
-- Graphs
+## Current Features
+
+### Maze System
+- Randomly generated maze using 2D arrays
+- Boundary walls for map constraints
+- Grid-based dungeon layout (0 = path, 1 = wall)
+
+### Player System
+- Smooth grid-based movement
+- WASD and Arrow key controls
+- Collision detection with walls
+
+### Enemy AI System
+- AI enemy that actively chases the player
+- Breadth First Search (BFS) pathfinding
+- Shortest path calculation in real time
+- Continuous movement using Java Timer
+
+### Game Engine
+- Built using Java Swing (JFrame + JPanel)
+- Custom rendering via `paintComponent`
+- Real-time update loop for gameplay
 
 ---
 
-## Planned Algorithms
-Algorithms planned for implementation:
-- Breadth First Search (BFS)
-- Depth First Search (DFS)
-- A* Pathfinding Algorithm
-- Recursive Maze Generation
-- Sorting Algorithms
+## Algorithms Implemented
+- Breadth First Search (BFS) for shortest pathfinding
 
 ---
 
-## Planned Features
-- Random dungeon generation
-- AI enemy pathfinding
-- Real-time movement visualization
-- Fog of war system
-- Statistics and algorithm comparison
-- Score tracking and ranking system
+## Data Structures Used
+- 2D Arrays (maze representation)
+- Queue (BFS traversal)
+- LinkedList (queue implementation)
+- Custom Node class for path tracking
 
 ---
 
-## Technologies
+## Technologies Used
 - Java
 - Java Swing
 - Java Collections Framework
 
 ---
 
-## Course
-Data Structures & Algorithms in Java  
+## To Be Implemented
+
+### AI Enhancements
+- A* Pathfinding Algorithm (smarter enemy movement)
+- Multiple enemy types with different behaviors
+
+### Gameplay Features
+- Player health system
+- Score and survival time tracking
+- Fog of war / limited visibility
+
+### Maze Improvements
+- Advanced procedural generation (DFS / Recursive Backtracking)
+- Larger and more complex maps
+
+### UI Improvements
+- Start menu screen
+- Game over screen
+- Pause and restart system
+
+---
+
+## Project Purpose
+
+This project was built as part of a Data Structures & Algorithms course at the University of Central Punjab to demonstrate:
+
+- Graph traversal algorithms in real-world applications
+- AI decision-making using BFS
+- Game logic implementation using Java
+- Visualization of abstract DSA concepts
+
+---
+
+## Future Vision
+
+The goal is to evolve this project into a fully functional AI-driven dungeon crawler that visually demonstrates multiple pathfinding and graph algorithms in action.
+
+---
+
+## Author
+Roohullah Khan  
 University of Central Punjab
