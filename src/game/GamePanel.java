@@ -136,8 +136,8 @@ public class GamePanel extends JPanel implements KeyListener {
 
         ArrayList<Node> path = bfsPath(enemyX, enemyY, playerX, playerY);
 
-        if (path.size() > 0) {
-            Node next = path.get(0);
+        if (!path.isEmpty()) {
+            Node next = path.getFirst();
 
             enemyX = next.x;
             enemyY = next.y;
