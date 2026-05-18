@@ -8,7 +8,7 @@ public class GameWindow extends JFrame {
 
         setTitle("AI Dungeon Escape Simulator");
 
-        setSize(800, 600);
+        setSize(800, 700);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
         setResizable(false);
