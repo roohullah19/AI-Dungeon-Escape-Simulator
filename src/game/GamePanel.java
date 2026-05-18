@@ -7,8 +7,8 @@ import java.awt.event.KeyListener;
 
 public class GamePanel extends JPanel implements KeyListener {
 
-    int playerX = 0;
-    int playerY = 0;
+    int playerX = 1;
+    int playerY = 1;
 
     int tileSize = 40;
     int cols = 15;
@@ -106,11 +106,14 @@ public class GamePanel extends JPanel implements KeyListener {
                     maze[r][c] = 1;
                 }
                 else {
-                    maze[r][c] = (Math.random() < 0.2) ? 1 : 0;
+                    maze[r][c] = (Math.random() < 0.3) ? 1 : 0;
                 }
             }
         }
 
-        maze[0][0] = 0;
+        maze[1][1] = 0;
+        maze[1][2] = 0;
+        maze[2][1] = 0;
+
     }
 }
