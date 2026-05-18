@@ -1,5 +1,5 @@
 package game;
-
+import java.util.*;
 import javax.swing.JPanel;
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -9,6 +9,9 @@ public class GamePanel extends JPanel implements KeyListener {
 
     int playerX = 1;
     int playerY = 1;
+
+    int enemyX = 13;
+    int enemyY = 8;
 
     int tileSize = 40;
     int cols = 15;
@@ -24,6 +27,13 @@ public class GamePanel extends JPanel implements KeyListener {
         setBackground(Color.BLACK);
         maze=new int[rows][cols];
         generateMaze();
+
+        javax.swing.Timer timer = new javax.swing.Timer(200, e -> {
+            moveEnemy();
+            repaint();
+        });
+
+        timer.start();
     }
 
     @Override
@@ -32,6 +42,7 @@ public class GamePanel extends JPanel implements KeyListener {
 
         drawGrid(g);
         drawPlayer(g);
+        drawEnemy(g);
     }
 
     public void drawGrid(Graphics g) {
@@ -62,6 +73,78 @@ public class GamePanel extends JPanel implements KeyListener {
 
         g.fillRect(playerX * tileSize, playerY * tileSize, tileSize, tileSize);
     }
+
+    public void drawEnemy(Graphics g) {
+
+        g.setColor(Color.RED);
+
+        g.fillRect(enemyX * tileSize, enemyY * tileSize, tileSize, tileSize);
+    }
+    public ArrayList<Node> bfsPath(int startX, int startY, int targetX, int targetY) {
+
+        boolean[][] visited = new boolean[rows][cols];
+        Node[][] parent = new Node[rows][cols];
+
+        Queue<Node> queue = new LinkedList<>();
+
+        queue.add(new Node(startX, startY));
+        visited[startY][startX] = true;
+
+        int[] dx = {0, 0, 1, -1};
+        int[] dy = {1, -1, 0, 0};
+
+        while (!queue.isEmpty()) {
+
+            Node current = queue.poll();
+
+            if (current.x == targetX && current.y == targetY) {
+                break;
+            }
+
+            for (int i = 0; i < 4; i++) {
+
+                int nx = current.x + dx[i];
+                int ny = current.y + dy[i];
+
+                if (nx >= 0 && ny >= 0 && nx < cols && ny < rows) {
+
+                    if (!visited[ny][nx] && maze[ny][nx] == 0) {
+
+                        queue.add(new Node(nx, ny));
+                        visited[ny][nx] = true;
+                        parent[ny][nx] = current;
+                    }
+                }
+            }
+        }
+
+        ArrayList<Node> path = new ArrayList<>();
+
+        Node current = new Node(targetX, targetY);
+
+        while (current != null && !(current.x == startX && current.y == startY)) {
+            path.add(current);
+            current = parent[current.y][current.x];
+        }
+
+        Collections.reverse(path);
+
+        return path;
+    }
+
+    public void moveEnemy() {
+
+        ArrayList<Node> path = bfsPath(enemyX, enemyY, playerX, playerY);
+
+        if (path.size() > 0) {
+            Node next = path.get(0);
+
+            enemyX = next.x;
+            enemyY = next.y;
+        }
+    }
+
+
 
     @Override
     public void keyPressed(KeyEvent e) {
@@ -117,3 +200,12 @@ public class GamePanel extends JPanel implements KeyListener {
 
     }
 }
+class Node {
+    int x, y;
+
+    Node(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+}
+
