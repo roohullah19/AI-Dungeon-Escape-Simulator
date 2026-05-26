@@ -4,14 +4,16 @@ import javax.swing.JPanel;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-
+import pathfinding.Node;
+import maze.MazeGenerator;
+import pathfinding.BFSPathFinder;
+import entities.Player;
+import entities.Enemy;
 public class GamePanel extends JPanel implements KeyListener {
 
-    int playerX = 1;
-    int playerY = 1;
+    Player player;
 
-    int enemyX = 13;
-    int enemyY = 8;
+    Enemy enemy;
 
     int tileSize =30;
     int cols = 21;
@@ -25,8 +27,7 @@ public class GamePanel extends JPanel implements KeyListener {
     int goalX = cols - 2;
     int goalY = rows - 2;
 
-    ArrayList<Node> visitedNodes = new ArrayList<>();
-    ArrayList<Node> finalPath = new ArrayList<>();
+    BFSPathFinder pathFinder;
 
     public GamePanel() {
         setFocusable(true);
@@ -34,8 +35,17 @@ public class GamePanel extends JPanel implements KeyListener {
 
         setSize(cols * tileSize, rows * tileSize);
         setBackground(Color.BLACK);
-        maze=new int[rows][cols];
-        generateMaze();
+        player = new Player(1, 1);
+
+        enemy = new Enemy(cols - 2, rows - 2);
+        MazeGenerator generator = new MazeGenerator(rows, cols);
+        generator.generateMaze();
+        maze = generator.getMaze();
+        maze[enemy.getY()][enemy.getX()] = 0;
+        pathFinder = new BFSPathFinder(maze, rows, cols);
+
+
+
 
         javax.swing.Timer timer = new javax.swing.Timer(300, e -> {
 
@@ -104,14 +114,14 @@ public class GamePanel extends JPanel implements KeyListener {
 
         g.setColor(Color.GREEN);
 
-        g.fillRect(playerX * tileSize, playerY * tileSize, tileSize, tileSize);
+        g.fillRect(player.getX() * tileSize, player.getY()* tileSize, tileSize, tileSize);
     }
 
     public void drawEnemy(Graphics g) {
 
         g.setColor(Color.RED);
 
-        g.fillRect(enemyX * tileSize, enemyY * tileSize, tileSize, tileSize);
+        g.fillRect(enemy.getX()* tileSize, enemy.getY() * tileSize, tileSize, tileSize);
     }
 
     public void drawGoal(Graphics g) {
@@ -125,7 +135,7 @@ public class GamePanel extends JPanel implements KeyListener {
 
         g.setColor(new Color(50, 100, 255));
 
-        for (Node n : visitedNodes) {
+        for (Node n : pathFinder.getVisitedNodes()){
 
             g.fillRect(
                     n.x * tileSize,
@@ -139,7 +149,7 @@ public class GamePanel extends JPanel implements KeyListener {
 
         g.setColor(Color.PINK);
 
-        for (Node n : finalPath) {
+        for (Node n : pathFinder.getFinalPath()){
 
             g.fillRect(
                     n.x * tileSize,
@@ -149,84 +159,32 @@ public class GamePanel extends JPanel implements KeyListener {
             );
         }
     }
-
-    public ArrayList<Node> bfsPath(int startX, int startY, int targetX, int targetY) {
-        visitedNodes.clear();
-
-
-        boolean[][] visited = new boolean[rows][cols];
-        Node[][] parent = new Node[rows][cols];
-
-        Queue<Node> queue = new LinkedList<>();
-
-        queue.add(new Node(startX, startY));
-        visited[startY][startX] = true;
-
-        int[] dx = {0, 0, 1, -1};
-        int[] dy = {1, -1, 0, 0};
-
-        while (!queue.isEmpty()) {
-
-            Node current = queue.poll();
-            visitedNodes.add(current);
-
-            if (current.x == targetX && current.y == targetY) {
-                break;
-            }
-
-            for (int i = 0; i < 4; i++) {
-
-                int nx = current.x + dx[i];
-                int ny = current.y + dy[i];
-
-                if (nx >= 0 && ny >= 0 && nx < cols && ny < rows) {
-
-                    if (!visited[ny][nx] && maze[ny][nx] == 0) {
-
-                        queue.add(new Node(nx, ny));
-                        visited[ny][nx] = true;
-                        parent[ny][nx] = current;
-                    }
-                }
-            }
-        }
-
-        finalPath.clear();
-
-        Node current = new Node(targetX, targetY);
-
-        while (current != null && !(current.x == startX && current.y == startY)) {
-            finalPath.add(current);
-            current = parent[current.y][current.x];
-        }
-
-        Collections.reverse(finalPath);
-
-        return finalPath;
-    }
-
     public void moveEnemy() {
 
-        ArrayList<Node> path = bfsPath(enemyX, enemyY, playerX, playerY);
+        ArrayList<Node> path =
+                pathFinder.bfsPath(enemy.getX(), enemy.getY(),
+                        player.getX(), player.getY());
 
-        if (!path.isEmpty()) {
-            Node next = path.getFirst();
+        if (path.size() > 1) {
 
-            enemyX = next.x;
-            enemyY = next.y;
+            Node next = path.get(0);
+
+            enemy.setPosition(next.x, next.y);
         }
     }
+
+
 
     public void checkGameOver() {
 
-        if (playerX == enemyX && playerY == enemyY) {
+        if (player.getX() == enemy.getX() && player.getY() == enemy.getY()){
             gameOver = true;
         }
     }
 
     public void checkWin() {
 
-        if (playerX == goalX && playerY == goalY) {
+        if (player.getX() == goalX && player.getY() == goalY) {
             gameWon = true;
         }
     }
@@ -245,23 +203,27 @@ public class GamePanel extends JPanel implements KeyListener {
         }
 
         if (key == KeyEvent.VK_W || key == KeyEvent.VK_UP) {
-            if (playerY > 0 && maze[playerY - 1][playerX] == 0)
-                playerY--;
+            if (player.getY() > 0 && maze[player.getY() - 1][player.getX()] == 0) {
+                player.setPosition(player.getX(), player.getY() - 1);
+            }
         }
 
         if (key == KeyEvent.VK_S || key == KeyEvent.VK_DOWN) {
-            if (playerY < rows - 1 && maze[playerY + 1][playerX] == 0)
-                playerY++;
+            if (player.getY() < rows - 1 && maze[player.getY() + 1][player.getX()] == 0) {
+                player.setPosition(player.getX(), player.getY() + 1);
+            }
         }
 
         if (key == KeyEvent.VK_A || key == KeyEvent.VK_LEFT) {
-            if (playerX > 0 && maze[playerY][playerX - 1] == 0)
-                playerX--;
+            if (player.getX() > 0 && maze[player.getY()][player.getX() - 1] == 0) {
+                player.setPosition(player.getX() - 1, player.getY());
+            }
         }
 
         if (key == KeyEvent.VK_D || key == KeyEvent.VK_RIGHT) {
-            if (playerX < cols - 1 && maze[playerY][playerX + 1] == 0)
-                playerX++;
+            if (player.getX() < cols - 1 && maze[player.getY()][player.getX() + 1] == 0) {
+                player.setPosition(player.getX() + 1, player.getY());
+            }
         }
 
         repaint();
@@ -273,74 +235,8 @@ public class GamePanel extends JPanel implements KeyListener {
     @Override
     public void keyTyped(KeyEvent e) {}
 
-    public void generateMaze() {
 
 
-        for (int r = 0; r < rows; r++) {
-            for (int c = 0; c < cols; c++) {
-                maze[r][c] = 1;
-            }
-        }
-
-
-        dfsMaze(1, 1);
-        addExtraPaths();
-
-
-        maze[1][1] = 0;
-        maze[rows - 2][cols - 2] = 0;
-    }
-
-    public void dfsMaze(int x, int y) {
-
-        maze[y][x] = 0;
-
-        int[] dx = {0, 0, 2, -2};
-        int[] dy = {2, -2, 0, 0};
-
-        Integer[] directions = {0, 1, 2, 3};
-
-        Collections.shuffle(Arrays.asList(directions));
-
-        for (int dir : directions) {
-
-            int nx = x + dx[dir];
-            int ny = y + dy[dir];
-
-            if (nx > 0 && ny > 0 &&
-                    nx < cols - 1 &&
-                    ny < rows - 1 &&
-                    maze[ny][nx] == 1) {
-
-                maze[y + dy[dir] / 2][x + dx[dir] / 2] = 0;
-
-                dfsMaze(nx, ny);
-            }
-        }
-    }
-    public void addExtraPaths() {
-
-        for (int r = 1; r < rows - 1; r++) {
-            for (int c = 1; c < cols - 1; c++) {
-
-
-                if (maze[r][c] == 1) {
-
-                    if (Math.random() < 0.15) {
-
-                        maze[r][c] = 0;
-                    }
-                }
-            }
-        }
-    }
 }
-class Node {
-    int x, y;
 
-    Node(int x, int y) {
-        this.x = x;
-        this.y = y;
-    }
-}
 
