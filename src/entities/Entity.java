@@ -1,17 +1,13 @@
 package entities;
 
-public class Enemy {
+public class Entity {
 
-    int x;
-    int y;
+    protected int x;
+    protected int y;
 
-    EnemyType type;
-
-    public Enemy(int x, int y, EnemyType type) {
-
+    public Entity(int x, int y) {
         this.x = x;
         this.y = y;
-        this.type = type;
     }
 
     public int getX() {
@@ -22,12 +18,7 @@ public class Enemy {
         return y;
     }
 
-    public EnemyType getType() {
-        return type;
-    }
-
     public void setPosition(int x, int y) {
-
         this.x = x;
         this.y = y;
     }

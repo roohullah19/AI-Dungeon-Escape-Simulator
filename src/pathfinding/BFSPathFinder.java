@@ -1,10 +1,13 @@
 package pathfinding;
 
 import java.util.*;
+import stats.AlgorithmStats;
+
 
 public class BFSPathFinder {
     ArrayList<Node> visitedNodes = new ArrayList<>();
     ArrayList<Node> finalPath = new ArrayList<>();
+    AlgorithmStats stats = new AlgorithmStats();
     int[][] maze;
 
     int rows;
@@ -18,7 +21,9 @@ public class BFSPathFinder {
         this.cols = cols;
     }
     public ArrayList<Node> bfsPath(int startX, int startY, int targetX, int targetY) {
+        long startTime = System.nanoTime();
         visitedNodes.clear();
+        finalPath.clear();
 
 
         boolean[][] visited = new boolean[rows][cols];
@@ -31,6 +36,7 @@ public class BFSPathFinder {
 
         int[] dx = {0, 0, 1, -1};
         int[] dy = {1, -1, 0, 0};
+        boolean pathFound = false;
 
         while (!queue.isEmpty()) {
 
@@ -38,6 +44,7 @@ public class BFSPathFinder {
             visitedNodes.add(current);
 
             if (current.x == targetX && current.y == targetY) {
+                pathFound = true;
                 break;
             }
 
@@ -57,8 +64,11 @@ public class BFSPathFinder {
                 }
             }
         }
+        if (!pathFound) {
+            return finalPath;
+        }
 
-        finalPath.clear();
+
 
         Node current = new Node(targetX, targetY);
 
@@ -68,10 +78,14 @@ public class BFSPathFinder {
         }
 
         Collections.reverse(finalPath);
+        stats.visitedNodes=visitedNodes.size();
+        stats.pathLength=finalPath.size();
+        stats.executionTime =System.nanoTime() - startTime;
 
         return finalPath;
     }
 
+    public AlgorithmStats getStats() {return stats;}
 
     public ArrayList<Node> getVisitedNodes() {
         return visitedNodes;
@@ -80,5 +94,7 @@ public class BFSPathFinder {
     public ArrayList<Node> getFinalPath() {
         return finalPath;
     }
+
+
 
 }
