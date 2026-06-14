@@ -10,6 +10,9 @@ public class GameWindow extends JFrame {
 
     MenuPanel menuPanel;
     GamePanel gamePanel;
+    GameSetupPanel namePanel;
+
+
 
     public GameWindow() {
 
@@ -23,8 +26,10 @@ public class GameWindow extends JFrame {
 
         menuPanel = new MenuPanel(this);
         gamePanel = new GamePanel(this);
+        namePanel=new GameSetupPanel(this);
 
         mainPanel.add(menuPanel, "MENU");
+        mainPanel.add(namePanel, "SETUP");
         mainPanel.add(gamePanel, "GAME");
 
         add(mainPanel);
@@ -33,16 +38,26 @@ public class GameWindow extends JFrame {
 
         setVisible(true);
     }
-    public GamePanel getGamePanel() {
-        return gamePanel;
+    public GamePanel getGamePanel() {return gamePanel;
     }
 
     public void showMenu() {
+        gamePanel.stopGameLoop();
         cardLayout.show(mainPanel, "MENU");
+    }
+    public void showSetupScreen() {
+        gamePanel.stopGameLoop();
+        cardLayout.show(mainPanel, "SETUP");
     }
 
     public void startGame() {
         cardLayout.show(mainPanel, "GAME");
+        gamePanel.startNewGame();
         gamePanel.requestFocusInWindow();
+
+        gamePanel.startGameLoop();
+    }
+    public boolean isGameActive() {
+        return cardLayout != null;
     }
 }

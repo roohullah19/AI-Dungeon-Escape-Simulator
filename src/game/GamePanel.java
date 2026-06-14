@@ -3,6 +3,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.*;
 import javax.swing.*;
+import javax.swing.Timer;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -14,7 +15,6 @@ import maze.MazeGenerator;
 import entities.Player;
 import entities.Enemy;
 import powerups.*;
-import stats.AlgorithmStats;
 
 public class GamePanel extends JPanel implements KeyListener {
 
@@ -22,7 +22,8 @@ public class GamePanel extends JPanel implements KeyListener {
 
     ArrayList<Enemy> enemies;
     ArrayList<PowerUp> powerUps;
-    Difficulty difficulty=Difficulty.HARD;
+    ArrayList<Node> playerTrail = new ArrayList<>();
+    Difficulty difficulty=Difficulty.EASY;
 
     Stack<Node> moveHistory = new Stack<>();
     TreeMap<Integer, String> leaderboard = new TreeMap<>(Collections.reverseOrder());
@@ -32,10 +33,11 @@ public class GamePanel extends JPanel implements KeyListener {
 
     private JPanel pausePanel;
 
+    private Timer timer;
 
 
     int tileSize =30;
-    int cols = 21;
+    int cols = 25;
     int rows = 21;
 
     int [][] maze;
@@ -55,12 +57,20 @@ public class GamePanel extends JPanel implements KeyListener {
     int goalX = cols - 2;
     int goalY = rows - 2;
 
+    Image goal;
+    Image ply;
+    Image en1;
+    Image en2;
+    Image en3;
+
+
     BFSPathFinder pathFinder;
     AStarPathFinder aStarPathFinder;
     DFSPathFinder dfsPathFinder;
 
     public GamePanel(GameWindow window) {
         this.window=window;
+
         setFocusable(true);
         addKeyListener(this);
         setFocusable(true);
@@ -69,9 +79,9 @@ public class GamePanel extends JPanel implements KeyListener {
         setSize(cols * tileSize, rows * tileSize);
         setBackground(Color.BLACK);
 
-        initializeGame();
+//        initializeGame();
 
-        javax.swing.Timer timer = new javax.swing.Timer(300, e -> {
+        timer = new javax.swing.Timer(300, e -> {
 
             if (!gameOver && !gameWon&&!paused) {
                 score = (int)((System.currentTimeMillis() - startTime) / 1000);
@@ -93,6 +103,9 @@ public class GamePanel extends JPanel implements KeyListener {
         setLayout(null);
     }
     public void createPausePanel() {
+        gameOver = false;
+        gameWon = false;
+        paused = false;
 
         pausePanel = new JPanel();
         pausePanel.setLayout(null);
@@ -169,6 +182,11 @@ public class GamePanel extends JPanel implements KeyListener {
         powerUps = new ArrayList<>();
         score = 0;
         startTime = System.currentTimeMillis();
+        goal=new ImageIcon("goal.png").getImage();
+        ply=new ImageIcon("p2.png").getImage();
+        en1 =new ImageIcon("en1.png").getImage();
+        en2 =new ImageIcon("en2.png").getImage();
+        en3 =new ImageIcon("en3.png").getImage();
 
         enemies = new ArrayList<>();
         collectedPowerUps.clear();
@@ -205,8 +223,9 @@ public class GamePanel extends JPanel implements KeyListener {
 
         drawGrid(g);
 //        drawVisited(g);
-        drawPath(g);
+//        drawPath(g);
  //       drawDFSPath(g);
+        drawPlayerTrail(g);
         drawGoal(g);
         drawPowerUp(g);
         drawPlayer(g);
@@ -318,7 +337,7 @@ public class GamePanel extends JPanel implements KeyListener {
                 int y = row * tileSize;
 
                 if (maze[row][col] == 1) {
-                    g.setColor(Color.GRAY);
+                    g.setColor(new Color(80,80,80));
                     g.fillRect(x, y, tileSize, tileSize);
                 } else {
                     g.setColor(Color.BLACK);
@@ -334,10 +353,9 @@ public class GamePanel extends JPanel implements KeyListener {
 
 
     public void drawPlayer(Graphics g) {
-
-        g.setColor(Color.GREEN);
-
-        g.fillRect(player.getX() * tileSize, player.getY()* tileSize, tileSize, tileSize);
+        if (ply != null) {
+            g.drawImage(ply, player.getX() * tileSize, player.getY() * tileSize, tileSize, tileSize, this);
+        }
     }
 
     public void drawEnemy(Graphics g) {
@@ -346,32 +364,29 @@ public class GamePanel extends JPanel implements KeyListener {
 
         for (Enemy enemy : enemies) {
             if(enemy.getType()==EnemyType.BFS){
-                g.setColor(Color.RED);
+                if (en1 != null) {
+                    g.drawImage(en1, enemy.getX() * tileSize, enemy.getY() * tileSize, tileSize, tileSize, this);
+                }
 
-                g.fillRect(enemy.getX() * tileSize, enemy.getY() * tileSize, tileSize, tileSize);
             } else if (enemy.getType()==EnemyType.DFS) {
-                g.setColor(Color.ORANGE);
-                g.fillRect(enemy.getX() * tileSize, enemy.getY() * tileSize, tileSize, tileSize);
+                if (en2 != null) {
+                    g.drawImage(en2, enemy.getX() * tileSize, enemy.getY() * tileSize, tileSize, tileSize, this);
+                }
+
 
             }else if (enemy.getType() == EnemyType.ASTAR) {
+                if (en3 != null) {
+                    g.drawImage(en3, enemy.getX() * tileSize, enemy.getY() * tileSize, tileSize, tileSize, this);
+                }
 
-                g.setColor(Color.MAGENTA);
-
-                g.fillRect(
-                        enemy.getX() * tileSize,
-                        enemy.getY() * tileSize,
-                        tileSize,
-                        tileSize
-                );
             }
         }
     }
 
     public void drawGoal(Graphics g) {
+        int pulse = (int)(5 * Math.sin(System.currentTimeMillis()/200.0));
 
-        g.setColor(Color.YELLOW);
-
-        g.fillRect(goalX * tileSize, goalY * tileSize, tileSize, tileSize);
+        g.drawImage(goal, goalX * tileSize - pulse/2, goalY * tileSize - pulse/2, tileSize + pulse, tileSize + pulse, this);
     }
     public void drawDFSPath(Graphics g) {
 
@@ -475,6 +490,7 @@ public class GamePanel extends JPanel implements KeyListener {
 
                 gameOver = true;
                 leaderboard.put(score,playerName);
+                savePlayerData();
                 return;
             }
         }
@@ -486,6 +502,7 @@ public class GamePanel extends JPanel implements KeyListener {
             score+=10;
             gameWon = true;
             leaderboard.put(score,playerName);
+            savePlayerData();
         }
     }
 
@@ -573,6 +590,8 @@ public class GamePanel extends JPanel implements KeyListener {
         if (key == KeyEvent.VK_W || key == KeyEvent.VK_UP) {
             if (player.getY() > 0 && (phaseWallActive || maze[player.getY() - 1][player.getX()] == 0)) {
                 moveHistory.push(new Node(player.getX(), player.getY()));
+                playerTrail.add(new Node(player.getX(), player.getY()));
+
                 player.setPosition(player.getX(),player.getY() - 1
                 );
             }
@@ -581,6 +600,7 @@ public class GamePanel extends JPanel implements KeyListener {
         if (key == KeyEvent.VK_S || key == KeyEvent.VK_DOWN) {
             if (player.getY() < rows - 1 &&(phaseWallActive || maze[player.getY() +1][player.getX()] == 0)) {
                 moveHistory.push(new Node(player.getX(), player.getY()));
+                playerTrail.add(new Node(player.getX(), player.getY()));
                 player.setPosition(player.getX(), player.getY() + 1);
             }
         }
@@ -589,6 +609,7 @@ public class GamePanel extends JPanel implements KeyListener {
 
             if (player.getX() > 0 && (phaseWallActive || maze[player.getY()][player.getX()-1] == 0)) {
                 moveHistory.push(new Node(player.getX(), player.getY()));
+                playerTrail.add(new Node(player.getX(), player.getY()));
                 player.setPosition(player.getX() - 1, player.getY());
             }
         }
@@ -596,11 +617,49 @@ public class GamePanel extends JPanel implements KeyListener {
         if (key == KeyEvent.VK_D || key == KeyEvent.VK_RIGHT) {
             if (player.getX() < cols - 1 && (phaseWallActive || maze[player.getY()][player.getX()+1] == 0)) {
                 moveHistory.push(new Node(player.getX(), player.getY()));
+                playerTrail.add(new Node(player.getX(), player.getY()));
                 player.setPosition(player.getX() + 1, player.getY());
             }
         }
+        if (playerTrail.size() > 6) {
+            playerTrail.remove(0);
+        }
 
         repaint();
+    }
+
+    public void drawPlayerTrail(Graphics g) {
+
+        Graphics2D g2 = (Graphics2D) g;
+
+        for (int i = 0; i < playerTrail.size(); i++) {
+
+            Node node = playerTrail.get(i);
+
+            int alpha = (int) (((double)(i + 1) / playerTrail.size()) * 120);
+
+            g2.setColor(new Color(0, 255, 0, alpha));
+
+            for (int r = 12; r >= 4; r -= 4) {
+
+                g2.setColor(new Color(0, 255, 0, alpha / 3));
+
+                g2.fillOval(node.x * tileSize + (12 - r), node.y * tileSize + (12 - r), tileSize - (24 - 2 * r), tileSize - (24 - 2 * r));
+            }
+        }
+    }
+
+    public void setPlayerName(String name) {
+        this.playerName = name;
+    }
+    public void setDifficulty(Difficulty difficulty) {
+        this.difficulty = difficulty;
+    }
+
+    private void savePlayerData() {
+
+        long timePlayed = (System.currentTimeMillis() - startTime) / 1000;
+        stats.PlayerFileManager.savePlayer(playerName, score, 1, timePlayed);
     }
 
     @Override
@@ -608,7 +667,16 @@ public class GamePanel extends JPanel implements KeyListener {
 
     @Override
     public void keyTyped(KeyEvent e) {}
+    public void startGameLoop() {
+        if (timer != null) timer.start();
+    }
 
+    public void stopGameLoop() {
+        if (timer != null) timer.stop();
+    }
+    public void startNewGame() {
+        initializeGame();
+    }
 
 
 }

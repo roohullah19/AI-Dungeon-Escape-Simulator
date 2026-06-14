@@ -48,7 +48,7 @@ public class MenuPanel extends JPanel {
         add(exitButton);
 
         startButton.addActionListener(e -> {
-            window.startGame();
+            window.showSetupScreen();
         });
 
         instructionButton.addActionListener(e -> {
