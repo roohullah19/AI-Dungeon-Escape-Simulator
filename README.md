@@ -1,81 +1,110 @@
 # AI Dungeon Escape Simulator
 
-A Java-based Data Structures & Algorithms project that simulates a grid-based dungeon game where a player escapes a randomly generated maze while being chased by an AI enemy using BFS pathfinding.
+A Java-based Data Structures & Algorithms project that simulates a grid-based dungeon game where a player escapes a procedurally generated maze while being chased by multiple AI enemies using BFS, DFS, and A* pathfinding.
 
 ---
 
 ## Project Overview
 
-This project demonstrates the practical implementation of core Data Structures and Algorithms in a real-time interactive environment using Java Swing.
+This project demonstrates the practical implementation of core Data Structures and Algorithms in a real-time interactive game environment using Java Swing.
 
-The main focus is on visualizing graph traversal (BFS) and applying it to AI-driven enemy movement in a maze-based game world.
+It focuses on visualizing graph traversal algorithms and applying them to AI-driven enemy behavior inside a procedurally generated maze world.
+
+The project has evolved into a modular game engine with multiple AI behaviors, power-ups, scoring, and UI systems.
 
 ---
 
-## Current Features
+## Key Features
 
 ### Maze System
-- Randomly generated maze using 2D arrays
-- Boundary walls for map constraints
-- Grid-based dungeon layout (0 = path, 1 = wall)
+- Procedurally generated maze using recursive backtracking (DFS)
+- Randomized additional paths for complexity
+- Grid-based representation (0 = path, 1 = wall)
+- Dynamic maze generation per game restart
 
 ### Player System
-- Smooth grid-based movement
-- WASD and Arrow key controls
-- Collision detection with walls
+- Grid-based movement (WASD + Arrow keys)
+- Undo move system (move history stack)
+- Collision handling with walls
+- Phase-wall power-up allows temporary wall passing
 
 ### Enemy AI System
-- AI enemy that actively chases the player
-- Breadth First Search (BFS) pathfinding
-- Shortest path calculation in real time
-- Continuous movement using Java Timer
+- Multiple AI enemies with different strategies:
+  - BFS Enemy (shortest path)
+  - DFS Enemy (exploration-based movement)
+  - A* Enemy (heuristic-based optimal pathfinding)
+- Real-time path recalculation
 
-### Game Engine
-- Built using Java Swing (JFrame + JPanel)
-- Custom rendering via `paintComponent`
-- Real-time update loop for gameplay
+### Power-Up System
+- Freeze Enemy (temporarily stops AI movement)
+- Phase Wall (allows player to pass through walls)
+- Random spawn system with safe placement logic
+
+### Game Systems
+- Score tracking based on survival time + achievements
+- Leaderboard using TreeMap (sorted high score system)
+- Pause / Resume system
+- Game reset and menu navigation
+- Game window system using CardLayout
 
 ---
 
 ## Algorithms Implemented
-- Breadth First Search (BFS) for shortest pathfinding
+- Breadth First Search (BFS)
+- Depth First Search (DFS)
+- A* Search Algorithm
+- Recursive Backtracking (Maze Generation)
 
 ---
 
 ## Data Structures Used
-- 2D Arrays (maze representation)
+- 2D Arrays (maze grid)
 - Queue (BFS traversal)
-- LinkedList (queue implementation)
-- Custom Node class for path tracking
+- Stack (move history / undo system)
+- PriorityQueue (A* open list)
+- HashSet (visited nodes in A*)
+- TreeMap (leaderboard)
+- ArrayList (entities and paths)
 
 ---
 
-## Technologies Used
+## Architecture Highlights
+- Modular package-based structure:
+  - `entities`
+  - `maze`
+  - `pathfinding`
+  - `powerups`
+  - `stats`
+  - `difficulty`
+  - `game`
+- Separation of concerns (GamePanel, Pathfinding, Entities, UI)
+- Extensible design for adding new AI types and mechanics
+
+---
+
+## Built With
 - Java
-- Java Swing
+- Java Swing (GUI rendering)
 - Java Collections Framework
 
 ---
 
-## To Be Implemented
+## Performance Stats (Visualized In-Game)
+- BFS vs DFS vs A* comparison
+- Visited nodes tracking
+- Path length analysis
+- Heap operations (A* efficiency)
+- Execution time benchmarking (nanoseconds)
 
-### AI Enhancements
-- A* Pathfinding Algorithm (smarter enemy movement)
-- Multiple enemy types with different behaviors
+---
 
-### Gameplay Features
-- Player health system
-- Score and survival time tracking
-- Fog of war / limited visibility
-
-### Maze Improvements
-- Advanced procedural generation (DFS / Recursive Backtracking)
-- Larger and more complex maps
-
-### UI Improvements
-- Start menu screen
-- Game over screen
-- Pause and restart system
+## To Be Improved / Future Work
+- Fog of War system
+- Advanced AI behaviors (aggressive/defensive modes)
+- Multiplayer mode
+- Animated sprites instead of blocks
+- Sound effects and game polish
+- Improved procedural generation (perfect maze + loops control)
 
 ---
 
@@ -83,19 +112,20 @@ The main focus is on visualizing graph traversal (BFS) and applying it to AI-dri
 
 This project was built as part of a Data Structures & Algorithms course at the University of Central Punjab to demonstrate:
 
-- Graph traversal algorithms in real-world applications
-- AI decision-making using BFS
-- Game logic implementation using Java
-- Visualization of abstract DSA concepts
+- Graph traversal algorithms in real-world applications  
+- AI decision-making using BFS, DFS, and A*  
+- Game development using Java Swing  
+- Visualization of abstract DSA concepts in an interactive system  
 
 ---
 
 ## Future Vision
 
-The goal is to evolve this project into a fully functional AI-driven dungeon crawler that visually demonstrates multiple pathfinding and graph algorithms in action.
+To evolve this project into a fully functional AI-driven dungeon crawler engine that demonstrates real-time pathfinding, adaptive AI, and scalable game architecture.
 
 ---
 
 ## Author
-Roohullah Khan  
+
+**Rohullah**  
 University of Central Punjab
