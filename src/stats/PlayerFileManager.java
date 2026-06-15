@@ -80,4 +80,28 @@ public class PlayerFileManager {
             e.printStackTrace();
         }
     }
+    public static String loadLeaderboard() {
+
+        Map<String, String[]> players = loadPlayers();
+
+        StringBuilder sb = new StringBuilder();
+
+        List<Map.Entry<String, String[]>> list = new ArrayList<>(players.entrySet());
+
+        list.sort((a, b) ->
+                Integer.compare(Integer.parseInt(b.getValue()[0]), Integer.parseInt(a.getValue()[0])));
+
+        sb.append("=== LEADERBOARD ===\n\n");
+
+        for (int i = 0; i < list.size(); i++) {
+
+            String name = list.get(i).getKey();
+            String score = list.get(i).getValue()[0];
+
+            sb.append((i + 1) + ". " + name + " - " + score + "\n");
+        }
+
+        return sb.toString();
+    }
+
 }

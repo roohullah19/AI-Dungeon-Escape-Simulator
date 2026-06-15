@@ -1,12 +1,9 @@
 package game;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
 import java.util.*;
 import javax.swing.*;
 import javax.swing.Timer;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
 
 import difficulty.Difficulty;
 import entities.EnemyType;
@@ -15,6 +12,7 @@ import maze.MazeGenerator;
 import entities.Player;
 import entities.Enemy;
 import powerups.*;
+import stats.AlgorithmManager;
 
 public class GamePanel extends JPanel implements KeyListener {
 
@@ -49,10 +47,22 @@ public class GamePanel extends JPanel implements KeyListener {
     boolean phaseWallActive = false;
     long phaseWallEndTime = 0;
     private GameWindow window;
+    private boolean showHUD =true;;
 
     boolean paused = false;
     TreeSet<PowerUpType> collectedPowerUps = new TreeSet<>();
+    AlgorithmManager algorithmManager = new AlgorithmManager();
 
+
+    private int hudX = 5;
+    private int hudY = 5;
+
+    private final int HUD_WIDTH = 380;
+    private final int HUD_HEIGHT = 340;
+
+    private boolean draggingHUD = false;
+    private int dragOffsetX;
+    private int dragOffsetY;
 
     int goalX = cols - 2;
     int goalY = rows - 2;
@@ -73,11 +83,44 @@ public class GamePanel extends JPanel implements KeyListener {
 
         setFocusable(true);
         addKeyListener(this);
-        setFocusable(true);
         setFocusTraversalKeysEnabled(false);
 
         setSize(cols * tileSize, rows * tileSize);
         setBackground(Color.BLACK);
+
+        addMouseListener(new MouseAdapter() {
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+
+                if (e.getX() >= hudX && e.getX() <= hudX + HUD_WIDTH && e.getY() >= hudY &&
+                        e.getY() <= hudY + HUD_HEIGHT) {
+
+                    draggingHUD = true;
+                    dragOffsetX = e.getX() - hudX;
+                    dragOffsetY = e.getY() - hudY;
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                draggingHUD = false;
+            }
+        });
+        addMouseMotionListener(new MouseMotionAdapter() {
+
+            @Override
+            public void mouseDragged(MouseEvent e) {
+
+                if (draggingHUD) {
+
+                    hudX = e.getX() - dragOffsetX;
+                    hudY = e.getY() - dragOffsetY;
+
+                    repaint();
+                }
+            }
+        });
 
 //        initializeGame();
 
@@ -175,8 +218,11 @@ public class GamePanel extends JPanel implements KeyListener {
     }
 
     public void initializeGame() {
+        moveHistory.clear();
+        playerTrail.clear();
         gameOver = false;
         gameWon = false;
+        showHUD = true;
         player = new Player(1, 1);
         enemies = new ArrayList<>();
         powerUps = new ArrayList<>();
@@ -199,7 +245,7 @@ public class GamePanel extends JPanel implements KeyListener {
         }else {
             enemies.add(new Enemy(cols - 2, rows - 2, EnemyType.BFS));
             enemies.add(new Enemy(1, rows - 2, EnemyType.DFS));
-            enemies.add(new Enemy(cols - 2, 1, EnemyType.ASTAR));
+            enemies.add(new Enemy(cols - 2, rows - 2, EnemyType.ASTAR));
         }
 
 
@@ -281,28 +327,86 @@ public class GamePanel extends JPanel implements KeyListener {
     }
 
     public void drawStats(Graphics g) {
-        g.setColor(new Color(0, 0, 0, 160));
-        g.fillRoundRect(5, 5, 280, 180, 15, 15);
 
-        g.setColor(Color.WHITE);
-        g.setFont(new Font("Consolas", Font.BOLD, 12));
+        if (!showHUD) return;
 
-        g.drawString("=== ALGORITHM STATS ===", 15, 25);
+        Graphics2D g2 = (Graphics2D) g;
 
-        g.drawString("BFS: V=" + pathFinder.getStats().visitedNodes + " P=" + pathFinder.getStats().pathLength, 15, 50);
+        // Background HUD (MOVABLE)
+        g2.setColor(new Color(0, 0, 0, 160));
+        g2.fillRoundRect(hudX, hudY, HUD_WIDTH, HUD_HEIGHT, 15, 15);
 
-        g.drawString("DFS: V=" + dfsPathFinder.getStats().visitedNodes + " P=" + dfsPathFinder.getStats().pathLength, 15, 70);
+        g2.setColor(Color.WHITE);
+        g2.setFont(new Font("Consolas", Font.BOLD, 12));
 
-        g.drawString("A*: V=" + aStarPathFinder.getStats().visitedNodes + " P=" + aStarPathFinder.getStats().pathLength, 15, 90);
+        int x = hudX + 10;
+        int y = hudY + 20;
 
-        g.drawString("Time BFS: " + pathFinder.getStats().executionTime, 15, 120);
-        g.drawString("Time A*: " + dfsPathFinder.getStats().executionTime, 15, 140);
-        g.drawString("Time DFS: " + aStarPathFinder.getStats().executionTime, 15, 160);
-        g.drawString("Heap Ops: " + aStarPathFinder.getStats().heapOperations, 15, 180);
+        g2.drawString("=== ALGORITHM STATS ===", x, y);
+        y += 25;
 
-        g.drawString("Score: " + score, 15, 205);
+        g2.drawString("BFS: V=" + pathFinder.getStats().visitedNodes +
+                " P=" + pathFinder.getStats().pathLength, x, y);
+        y += 20;
 
+        g2.drawString("DFS: V=" + dfsPathFinder.getStats().visitedNodes +
+                " P=" + dfsPathFinder.getStats().pathLength, x, y);
+        y += 20;
 
+        g2.drawString("A*: V=" + aStarPathFinder.getStats().visitedNodes +
+                " P=" + aStarPathFinder.getStats().pathLength, x, y);
+        y += 25;
+
+        g2.drawString("Time BFS: " + pathFinder.getStats().executionTime, x, y);
+        y += 20;
+
+        g2.drawString("Time DFS: " + dfsPathFinder.getStats().executionTime, x, y);
+        y += 20;
+
+        g2.drawString("Time A*: " + aStarPathFinder.getStats().executionTime, x, y);
+        y += 20;
+
+        g2.drawString("Heap Ops: " + aStarPathFinder.getStats().heapOperations, x, y);
+        y += 25;
+
+        g2.drawString("Score: " + score, x, y);
+        y += 20;
+
+        g2.drawString("Undo Stack: " + moveHistory.size(), x, y);
+        y += 25;
+
+        g2.drawString("Avg BFS Time: " + (long) algorithmManager.getAverageBFSTime(), x, y);
+        y += 20;
+
+        g2.drawString("Avg DFS Time: " + (long) algorithmManager.getAverageDFSTime(), x, y);
+        y += 20;
+
+        g2.drawString("Avg A*: " + (long) algorithmManager.getAverageAStarTime(), x, y);
+        y += 25;
+
+        g2.drawString("Avg BFS: V=" +
+                (int) algorithmManager.getAverageBFSVisited() +
+                " P=" + (int) algorithmManager.getAverageBFSPorthLength(), x, y);
+        y += 20;
+
+        g2.drawString("Avg DFS: V=" +
+                (int) algorithmManager.getAverageDFSVisited() +
+                " P=" + (int) algorithmManager.getAverageDFSPorthLength(), x, y);
+        y += 20;
+
+        g2.drawString("Avg A*: V=" +
+                (int) algorithmManager.getAverageAStarVisited() +
+                " P=" + (int) algorithmManager.getAverageAStarPathLength(), x, y);
+        y += 25;
+
+        if (enemiesFrozen) {
+            g2.drawString("FREEZE ACTIVE", x, y);
+            y += 20;
+        }
+
+        if (phaseWallActive) {
+            g2.drawString("PHASE WALL ACTIVE", x, y);
+        }
     }
     public void drawPowerUp(Graphics g) {
         for (PowerUp powerUp:powerUps){
@@ -434,19 +538,14 @@ public class GamePanel extends JPanel implements KeyListener {
 
             if (enemy.getType() == EnemyType.BFS) {
 
-                ArrayList<Node> path =
-                        pathFinder.bfsPath(
-                                enemy.getX(),
-                                enemy.getY(),
-                                player.getX(),
-                                player.getY()
-                        );
+                ArrayList<Node> path = pathFinder.bfsPath(enemy.getX(), enemy.getY(), player.getX(), player.getY());
 
                 if (!path.isEmpty()) {
 
                     Node next = path.get(0);
 
                     enemy.setPosition(next.x, next.y);
+                    algorithmManager.addBFSStats(pathFinder.getStats());
                 }
             }
 
@@ -458,22 +557,18 @@ public class GamePanel extends JPanel implements KeyListener {
                     Node next = path.get(0);
 
                     enemy.setPosition(next.x, next.y);
+                    algorithmManager.addDFSStats(dfsPathFinder.getStats());
                 }
             }
             else if (enemy.getType() == EnemyType.ASTAR) {
 
-                ArrayList<Node> path =
-                        aStarPathFinder.aStarPath(
-                                enemy.getX(),
-                                enemy.getY(),
-                                player.getX(),
-                                player.getY()
-                        );
+                ArrayList<Node> path = aStarPathFinder.aStarPath(enemy.getX(), enemy.getY(), player.getX(), player.getY());
 
                 if (!path.isEmpty()) {
 
                     Node next = path.get(0);
                     enemy.setPosition(next.x, next.y);
+                    algorithmManager.addAStarStats(aStarPathFinder.getStats());
 
                 }
             }
@@ -489,8 +584,29 @@ public class GamePanel extends JPanel implements KeyListener {
             if (player.getX() == enemy.getX() && player.getY() == enemy.getY()) {
 
                 gameOver = true;
+
+                long timePlayed = (System.currentTimeMillis() - startTime) / 1000;
                 leaderboard.put(score,playerName);
                 savePlayerData();
+                loadLeaderboard();
+                algorithmManager.savePlayerStats(
+
+                        playerName,
+
+                        algorithmManager.getAverageBFSPorthLength(),
+                        algorithmManager.getAverageBFSVisited(),
+                        algorithmManager.getAverageBFSTime(),
+
+                        algorithmManager.getAverageDFSPorthLength(),
+                        algorithmManager.getAverageDFSVisited(),
+                        algorithmManager.getAverageDFSTime(),
+
+                        algorithmManager.getAverageAStarPathLength(),
+                        algorithmManager.getAverageAStarVisited(),
+                        algorithmManager.getAverageAStarTime()
+                );
+                window.showEndScreen(false, playerName, score, timePlayed);
+
                 return;
             }
         }
@@ -503,6 +619,26 @@ public class GamePanel extends JPanel implements KeyListener {
             gameWon = true;
             leaderboard.put(score,playerName);
             savePlayerData();
+
+            long timePlayed = (System.currentTimeMillis() - startTime) / 1000;
+            loadLeaderboard();
+            algorithmManager.savePlayerStats(
+
+                    playerName,
+
+                    algorithmManager.getAverageBFSPorthLength(),
+                    algorithmManager.getAverageBFSVisited(),
+                    algorithmManager.getAverageBFSTime(),
+
+                    algorithmManager.getAverageDFSPorthLength(),
+                    algorithmManager.getAverageDFSVisited(),
+                    algorithmManager.getAverageDFSTime(),
+
+                    algorithmManager.getAverageAStarPathLength(),
+                    algorithmManager.getAverageAStarVisited(),
+                    algorithmManager.getAverageAStarTime()
+            );
+            window.showEndScreen(true, playerName, score, timePlayed);
         }
     }
 
@@ -543,6 +679,22 @@ public class GamePanel extends JPanel implements KeyListener {
         }
     }
 
+    public void loadLeaderboard() {
+
+        leaderboard.clear();
+
+        Map<String, String[]> players = stats.PlayerFileManager.loadPlayers();
+
+        for (String name : players.keySet()) {
+
+            String[] data = players.get(name);
+
+            int bestScore = Integer.parseInt(data[0]);
+
+            leaderboard.put(bestScore, name);
+        }
+    }
+
 
 
 
@@ -555,10 +707,6 @@ public class GamePanel extends JPanel implements KeyListener {
         if (key == KeyEvent.VK_ESCAPE) {
             togglePause();
             return;
-        }
-        if (key == KeyEvent.VK_R) {
-            initializeGame();
-            paused = false;
         }
         if (key == KeyEvent.VK_M) {
             window.showMenu();
@@ -586,6 +734,9 @@ public class GamePanel extends JPanel implements KeyListener {
             }
             repaint();
             return;
+        }
+        if(key == KeyEvent.VK_H){
+            showHUD = !showHUD;
         }
         if (key == KeyEvent.VK_W || key == KeyEvent.VK_UP) {
             if (player.getY() > 0 && (phaseWallActive || maze[player.getY() - 1][player.getX()] == 0)) {

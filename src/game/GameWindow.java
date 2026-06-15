@@ -11,6 +11,8 @@ public class GameWindow extends JFrame {
     MenuPanel menuPanel;
     GamePanel gamePanel;
     GameSetupPanel namePanel;
+    EndGamePanel endPanel;
+    LeaderboardPanel leaderboardPanel;
 
 
 
@@ -27,10 +29,14 @@ public class GameWindow extends JFrame {
         menuPanel = new MenuPanel(this);
         gamePanel = new GamePanel(this);
         namePanel=new GameSetupPanel(this);
+        endPanel = new EndGamePanel(this);
+        leaderboardPanel = new LeaderboardPanel(this);
 
         mainPanel.add(menuPanel, "MENU");
         mainPanel.add(namePanel, "SETUP");
         mainPanel.add(gamePanel, "GAME");
+        mainPanel.add(endPanel, "END");
+        mainPanel.add(leaderboardPanel, "LEADERBOARD");
 
         add(mainPanel);
 
@@ -59,5 +65,22 @@ public class GameWindow extends JFrame {
     }
     public boolean isGameActive() {
         return cardLayout != null;
+    }
+    public void showEndScreen(boolean won, String playerName, int score, long timePlayed) {
+
+        gamePanel.stopGameLoop();
+
+        endPanel.updateResult(won, playerName, score, timePlayed);
+
+        cardLayout.show(mainPanel, "END");
+    }
+    public void showLeaderboard() {
+        gamePanel.stopGameLoop();
+
+        String data = stats.PlayerFileManager.loadLeaderboard();
+
+        leaderboardPanel.setData(data);
+
+        cardLayout.show(mainPanel, "LEADERBOARD");
     }
 }
